@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCurrentUser } from "@/lib/auth";
 import { LogOutButton } from "@/modules/auth/log-out-button";
 import Link from "next/link";
 
-export default function Home(){
+export default async function Home(){
 
   // const fullUser = null;
-  const fullUser = { id: "1", name: "Kyle", role: "user"}
+  const fullUser = await getCurrentUser({ withFullUser: true})
   return (
     <div className="container mx-auto p-4">
       {fullUser == null ? (

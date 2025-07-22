@@ -8,3 +8,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  admin
+  user
+}
+
+enum OAuthProvider {
+  discord
+  github
+}
+
+model User {
+  id            String             @id @default(uuid()) @db.Uuid
+  name          String
+  email         String             @unique
+  password      String?
+  salt          String?
+  role          UserRole           @default(user)
+  createdAt     DateTime           @default(now()) @db.Timestamptz
+  updatedAt     DateTime           @updatedAt @db.Timestamptz
+
+  // Relasi: Satu User memiliki banyak UserOAuthAccount
+  oAuthAccounts UserOAuthAccount[]
+
+  @@map("users")
+}
+
+model UserOAuthAccount {
+  userId            String        @db.Uuid
+  provider          OAuthProvider
+  providerAccountId String
+
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  // Relasi: Satu UserOAuthAccount dimiliki oleh satu User
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Composite Primary Key
+  @@id([provider, providerAccountId])
+  @@map("user_oauth_accounts")
+}

@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { signIn } from "@/actions/auth/auth-action";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,13 +25,20 @@ export function SignInForm() {
     },
   });
 
+  async function onSubmit(data: z.infer<typeof signInSchema>) {
+    const error = await signIn(data);
+    setError(error);
+  }
   return (
     <Form {...form}>
-      <form action="" className="space-y-8">
-        <div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {error && <p className="text-destructive">{error}</p>}
+        <div className="flex gap-4 justify-between">
           <Button type="button">Discord</Button>
           <Button type="button">Github</Button>
         </div>
+        
+         {/* -- Email */}
         <FormField
           control={form.control}
           name="email"
@@ -44,6 +52,8 @@ export function SignInForm() {
             </FormItem>
           )}
         />
+
+         {/* -- Password */}
         <FormField
           control={form.control}
           name="password"
