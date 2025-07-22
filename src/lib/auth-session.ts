@@ -1,8 +1,6 @@
-//src/lib/auth-session.ts
 import { redisClient } from "@/redis/redis";
 import { sessionSchema } from "@/schemas/session";
 import z from "zod";
-import crypto from "crypto";
 
 const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7
 const COOKIE_SESSION_KEY = "session-id"
@@ -22,8 +20,8 @@ export type Cookies = {
     ) => void
     get: (key: string) => { name: string; value: string } | undefined
     delete: (key: string) => void
-} 
-
+}
+// done
 export function getUserFromSession(cookies: Pick<Cookies, "get">){
     const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value
     if (sessionId == null) return null
@@ -41,14 +39,20 @@ export async function updateUserSessionData(
     await redisClient.set(`session:${sessionId}`, sessionSchema.parse(user), {
         ex: SESSION_EXPIRATION_SECONDS
     })
-
 }
 
+//done 
 export async function createUserSession(
     user: UserSession,
     cookies: Pick<Cookies, "set">
 ){
-    const sessionId = crypto.randomBytes(512).toString("hex").normalize()
+    // Gunakan Web Crypto API untuk generate session ID
+    const array = new Uint8Array(64) // 512 bits
+    crypto.getRandomValues(array)
+    const sessionId = Array.from(array)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+    
     await redisClient.set(`session:${sessionId}`, sessionSchema.parse(user), {
         ex: SESSION_EXPIRATION_SECONDS
     })
@@ -72,6 +76,7 @@ export async function updateUserSessionExpiration(
     setCookie(sessionId, cookies)
 }
 
+
 export async function removeUserFromSession(
   cookies: Pick<Cookies, "get" | "delete">
 ) {
@@ -82,15 +87,17 @@ export async function removeUserFromSession(
   cookies.delete(COOKIE_SESSION_KEY)
 }
 
+//done
 function setCookie(sessionId: string, cookies: Pick<Cookies, "set">){
     cookies.set(COOKIE_SESSION_KEY, sessionId, {
         secure: true,
         httpOnly: true,
         sameSite: "lax",
-        expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000
+        expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000 //milisekon
     })
 }
 
+//done
 async function getUserSessionById(sessionId: string) {
     const rawUser = await redisClient.get(`session:${sessionId}`)
 
